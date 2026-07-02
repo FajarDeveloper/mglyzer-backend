@@ -12,15 +12,15 @@ export default async function handler(req, res) {
     try {
         const { model, messages, temperature } = req.body;
         
-        // Panggil Environment Variables rahasia dari Vercel
+        // Panggil Environment Variables
         const apiKey = process.env.AI_API_KEY; 
-        const aiBaseUrl = process.env.AI_BASE_URL; // Cth: https://api.openai.com/v1/chat/completions
+        const aiBaseUrl = process.env.AI_BASE_URL; 
 
         const response = await fetch(aiBaseUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}` // API Key disisipkan dengan aman di server
+                'Authorization': `Bearer ${apiKey}` 
             },
             body: JSON.stringify({ model, messages, temperature })
         });
