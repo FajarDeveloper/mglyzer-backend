@@ -5,10 +5,13 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
     try {
-        const { action, id, pass, newPass } = req.body;
+        const { action, id, pass, newPass, target_db } = req.body;
+        
+        // Tentukan database tujuan (MGLYZER AI atau Miracle Scanner)
+        const dbPath = target_db === 'scanner_users' ? 'scanner_users' : 'miracle_users';
 
         if (action === 'login') {
-            const snap = await db.ref('miracle_users/' + id).once('value');
+            const snap = await db.ref(dbPath + '/' + id).once('value');
             if (!snap.exists()) return res.status(400).json({ error: "ID Pengguna tidak ditemukan!" });
             
             const data = snap.val();
@@ -21,7 +24,7 @@ export default async function handler(req, res) {
             }
 
             const sessionToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
-            await db.ref('miracle_users/' + id).update({ session_token: sessionToken });
+            await db.ref(dbPath + '/' + id).update({ session_token: sessionToken });
 
             return res.status(200).json({ 
                 success: true, 
@@ -32,8 +35,14 @@ export default async function handler(req, res) {
         }
 
         if (action === 'change_password') {
-            await db.ref('miracle_users/' + id).update({ password: newPass });
+            await db.ref(dbPath + '/' + id).update({ password: newPass });
             return res.status(200).json({ success: true });
+        }
+
+        if (action === 'check_session') {
+            const snap = await db.ref(dbPath + '/' + id).once('value');
+            if (!snap.exists()) return res.status(400).json({ error: "Sesi tidak valid." });
+            return res.status(200).json({ success: true, data: snap.val() });
         }
 
     } catch (error) {
